@@ -1,0 +1,38 @@
+name: Build FD-SoH Linux
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y gcc g++ git cmake ninja-build lsb-release libsdl2-dev libpng-dev libsdl2-net-dev libzip-dev zipcmp zipmerge ziptool nlohmann-json3-dev libtinyxml2-dev libspdlog-dev libopengl-dev libopusfile-dev libvorbis-dev libbz2-dev
+
+      - name: Configure
+        run: cmake -S . -B build-cmake -GNinja
+
+      - name: Build
+        run: cmake --build build-cmake --target soh -j2
+
+      - name: Package
+        run: |
+          mkdir -p FD-SoH
+          cp build-cmake/soh/soh.elf FD-SoH/
+          tar -czf FD-SoH-Linux.tar.gz FD-SoH
+
+      - name: Upload FD-SoH
+        uses: actions/upload-artifact@v4
+        with:
+          name: FD-SoH-Linux
+          path: FD-SoH-Linux.tar.gz
+          
